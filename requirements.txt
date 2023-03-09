@@ -1,0 +1,6 @@
+# Hosting requirements
+uvicorn
+blacksheep
+
+# Database handling
+pymongo[zstd,encryption]
