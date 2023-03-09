@@ -4,3 +4,7 @@ blacksheep
 
 # Database handling
 pymongo[zstd,encryption]
+
+# TOML parsing
+# Module is built in on Python 3.11+
+tomli; python_version < "3.11"
