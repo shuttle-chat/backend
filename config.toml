@@ -5,6 +5,8 @@
 [server]
 name = "Shuttle Server"
 maintainer = "John Smith <john@example.com>"
+bind_port = 8080
+bind_address = "0.0.0.0"
 
 # Database configuration
 [database]

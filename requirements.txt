@@ -1,5 +1,5 @@
 # Hosting requirements
-uvicorn
+uvicorn[standard]
 blacksheep
 
 # Database handling

@@ -4,6 +4,7 @@
 import os
 import sys
 import pathlib
+from typing import Any
 from getpass import getuser
 
 if (
@@ -21,8 +22,9 @@ else:
 
     except ImportError:
         print(
-            "Shuttle is missing tomli, a required dependency for TOML-parsing on Python versions less then " +
-            "3.11. It is recommended that you install all dependencies inside requirements.txt."
+            "Shuttle is missing tomli, a required dependency for TOML-parsing on Python versions less then 3.11.",
+            "It is recommended that you install all dependencies inside requirements.txt.",
+            sep = "\n"
         )
         sys.exit(1)
 
@@ -49,14 +51,28 @@ if final_path is None:
     sys.exit(1)
 
 # Load config.toml
-try:
-    with open(final_path, "rb") as fh:
-        config = tomllib.load(fh)
+class ShuttleTOMLConfig(object):
+    def __init__(self, path: str) -> None:
+        try:
+            with open(path, "rb") as fh:
+                self.data = tomllib.load(fh)
 
-except OSError as e:
-    print(
-        f"Shuttle was unable to read the config.toml file at '{final_path}'.",
-        f"Please make sure user '{getuser()}' has permission to access this file.",
-        sep = "\n"
-    )
-    raise e
+        except tomllib.TOMLDecodeError:
+            print(f"Shuttle config.toml file at '{path}' is not valid TOML.")
+            sys.exit(1)
+
+        except OSError as e:
+            print(
+                f"Shuttle was unable to read the config.toml file at '{path}'.",
+                f"Please make sure user '{getuser()}' has permission to access this file.",
+                sep = "\n"
+            )
+            raise e
+
+    def __repr__(self) -> dict:
+        return self.data
+
+    def __getattr__(self, key: str) -> Any:
+        return self.data.__getitem__(key) or {}
+
+config = ShuttleTOMLConfig(final_path)
