@@ -1,4 +1,4 @@
-# Shuttle v1.0.0
+# Shuttle v1.0.1
 # Example configuration document
 
 # Server configuration
@@ -29,3 +29,7 @@ force-api-spec = false
 
 # Uncomment to force usage of API v1
 #force-api-spec = "v1"
+
+# API v1 Configuration
+[api.v1]
+hash_algorithm = "argon2"  # Defaults to argon2, available options are 'argon2', 'sha256' and 'sha512'
