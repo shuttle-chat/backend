@@ -23,6 +23,8 @@ class HashAlgorithmLoader(object):
         if self.func is None:
             raise InvalidHashAlgorithm(f"no such algorithm available: '{self.name}'")
 
+        self.hash, self.check = self.func
+
 hash_alg = HashAlgorithmLoader()
 
 # Events
@@ -31,11 +33,11 @@ def on_init() -> None:
     hash_alg.load()
 
 # API specifications
-@spec.function("register")
-def register_user(username: str, password: str) -> None:
+@spec.function("post", "register")
+def register_user(username: str, password: str) -> dict:
     print("API v1 is attempting to register a user!")
     print("Username:", username)
     print("Password:", password)
     print("Hashing Algorithm:", hash_alg.name)
-    print("Hashed password:", hash_alg.func(password))
-    return
+    print("Hashed password:", hash_alg.hash(password))
+    return {"data": "hello world!!!!!"}

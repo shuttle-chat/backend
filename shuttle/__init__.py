@@ -1,13 +1,14 @@
 # Copyright 2023 iiPython
 
 # Metadata
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 __author__ = "iiPython"
 __copyright__ = "(c) 2023 iiPython"
 __license__ = "GPLv3"
 
 # Modules
 from .config import config
+from .router import mount_api
 
 import os
 import pathlib
@@ -36,8 +37,12 @@ if force_api_spec:
     print(f"Shuttle is now enforcing API {force_api_spec}!")
 
 print("Now importing all API specifications ...")
+api_endpoints = {}
 for api_version in api_versions:
     spec = importlib.import_module(f"shuttle.api.{api_version}").spec
     spec.initialize(config.api.get(api_version, {}))
-    print("Available endpoints:", spec.endpoints)
+    api_endpoints[api_version] = spec.endpoints
     print(f"Loaded API {api_version} from '{os.path.join(api_directory, api_version, '__init__.py')}'")
+
+mount_api(app, api_endpoints)
+print("Mounted all API specifications into Blacksheep app!")

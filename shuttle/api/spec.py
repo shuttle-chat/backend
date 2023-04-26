@@ -1,6 +1,7 @@
 # Copyright 2023 iiPython
 
 # Modules
+import inspect
 from types import FunctionType
 
 # Specification class
@@ -14,11 +15,12 @@ class ShuttleAPISpecification(object):
         if self.after_init is not None:
             self.after_init()
 
-    def function(self, name: str) -> FunctionType:
+    def function(self, method: str, name: str) -> FunctionType:
         def callback(handler: FunctionType) -> None:
             self.endpoints[name] = {
                 "cb": handler,
-                "args": [(n, t) for n, t in handler.__annotations__.items() if n != "return"]
+                "method": method,
+                "aspec": inspect.getfullargspec(handler)
             }
 
         return callback
