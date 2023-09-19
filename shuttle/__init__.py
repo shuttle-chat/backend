@@ -1,48 +1,17 @@
 # Copyright 2023 iiPython
 
 # Metadata
-__version__ = "1.0.2"
+__version__ = "1.1.0"
 __author__ = "iiPython"
 __copyright__ = "(c) 2023 iiPython"
 __license__ = "GPLv3"
 
 # Modules
-from .config import config
-from .router import mount_api
-
-import os
-import pathlib
-import importlib
-from blacksheep import Application
+from fastapi import FastAPI
 
 # Initialization
-app = Application()
+app = FastAPI()
 
-# Begin serving API
-api_directory = pathlib.Path(__file__).parent / "api"
-api_versions = [
-    v.removesuffix(".py")
-    for v in os.listdir(api_directory)
-    if v[0] != "_" and os.path.isdir(os.path.join(api_directory, v))
-]
-print("Available API version(s):", api_versions)
+# Begin loading routes
+from .routes import authentication  # noqa
 
-force_api_spec = config.api.get("force-api-spec")
-if force_api_spec:
-    if force_api_spec not in api_versions:
-        print(f"Invalid force-api-spec value of '{force_api_spec}'!")
-        exit(1)
-
-    api_versions = [force_api_spec]
-    print(f"Shuttle is now enforcing API {force_api_spec}!")
-
-print("Now importing all API specifications ...")
-api_endpoints = {}
-for api_version in api_versions:
-    spec = importlib.import_module(f"shuttle.api.{api_version}").spec
-    spec.initialize(config.api.get(api_version, {}))
-    api_endpoints[api_version] = spec.endpoints
-    print(f"Loaded API {api_version} from '{os.path.join(api_directory, api_version, '__init__.py')}'")
-
-mount_api(app, api_endpoints)
-print("Mounted all API specifications into Blacksheep app!")

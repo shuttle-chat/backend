@@ -1,35 +1,17 @@
-# Shuttle v1.0.1
+# Shuttle v1.1.0
 # Example configuration document
 
 # Server configuration
 [server]
 name = "Shuttle Server"
-maintainer = "John Smith <john@example.com>"
-bind_port = 8080
-bind_address = "0.0.0.0"
 
 # Database configuration
 [database]
-type = "mongo"              # TO BE IMPLEMENTED
-address = "127.0.0.1"
 port = 27017
+address = "127.0.0.1"
 
 [database.authentication]
-enabled = false
-username = "john"
-password = "johnrocks"
-
-# API specifications
-[api]
-
-# force-api-spec
-# Selects which API specification clients are required to use.
-# If set to false or an empty string, clients can use old API versions.
-force-api-spec = false
-
-# Uncomment to force usage of API v1
-#force-api-spec = "v1"
-
-# API v1 Configuration
-[api.v1]
-hash_algorithm = "argon2"  # Defaults to argon2, available options are 'argon2', 'sha256' and 'sha512'
+username = "username"
+password = "password"
+authSource = "admin"
+authMechanism = "SCRAM-SHA-256"

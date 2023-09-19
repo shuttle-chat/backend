@@ -1,6 +1,10 @@
 # Hosting requirements
+fastapi
+starlette
 uvicorn[standard]
-blacksheep
+
+# Dependency of FastAPI
+pydantic
 
 # Database handling
 pymongo[zstd,encryption]
