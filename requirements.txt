@@ -5,8 +5,10 @@ uvicorn[standard]
 
 # Dependency of FastAPI
 pydantic
+websockets
 
 # Database handling
+nanoid
 pymongo[zstd,encryption]
 
 # Password hashing

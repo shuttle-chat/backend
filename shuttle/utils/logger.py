@@ -26,3 +26,5 @@ class Logger(object):
     def fatal(self, message: str) -> None:
         self._print("fatal", message)
         sys.exit(1)
+
+logger = Logger()

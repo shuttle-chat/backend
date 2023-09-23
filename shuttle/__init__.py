@@ -13,5 +13,6 @@ from fastapi import FastAPI
 app = FastAPI()
 
 # Begin loading routes
+from .gateway import router  # noqa
 from .routes import authentication  # noqa
 

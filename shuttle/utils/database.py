@@ -15,4 +15,6 @@ client = MongoClient(
     mongo_config["port"],
     **mongo_auth_config,
 )
-client.list_database_names()
+
+# Database reference
+db = client.shuttle
