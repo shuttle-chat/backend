@@ -2,4 +2,4 @@
 
 from .config import config  # noqa
 from .logger import logger  # noqa
-from .database import db    # noqa
+from .database import db, redis    # noqa

@@ -1,8 +1,8 @@
 # Copyright 2023 iiPython
 
 # Modules
-import json
 from inspect import signature
+from json import JSONDecodeError
 
 import pydantic
 from fastapi import WebSocket, WebSocketDisconnect
@@ -10,60 +10,80 @@ from fastapi import WebSocket, WebSocketDisconnect
 from shuttle import app
 from shuttle.gateway import (
     gateway_actions,
-    ShuttleSession, ConnectionManager
+    Session, ConnectionManager
 )
 
 from .actions.spaces import spaces_actions
+# from .actions.messages import message_actions
 
 # Initialization
 manager = ConnectionManager()
 gateway_actions = {
     **gateway_actions,
     **spaces_actions
+    # **message_actions
 }
 
 # Handle gateway interactions
 @app.websocket("/api/gateway")
 async def gateway_endpoint(ws: WebSocket) -> None:
-    await manager.connect(ws)
+    await ws.accept()
 
     # Handle main client loop
-    session = ShuttleSession(socket = ws)
-    try:
-        while True:
-            try:
-                data = await ws.receive_json()
-                action, payload = data["action"], data["payload"]
-
-            except KeyError:
-                await session.error("Missing action or payload!")
+    session = Session(ws, manager)
+    while True:
+        try:
+            data = await ws.receive_json()
+            response = session.create_response(None)
+            if "action" not in data:
+                await response.error("Missing action!")
                 continue
 
-            # Basic sanitation
-            if action not in gateway_actions:
-                await session.error("Specified action does not exist!")
+            elif "payload" not in data:
+                await response.error("Missing payload!")
                 continue
+
+            # Check for callback
+            action, payload = data["action"], data["payload"]
+            callback = data.get("callback")
+            if (callback is not None) and not isinstance(callback, str):
+                await session.error("Callback MUST be a string!")
+                continue
+
+            response.callback = callback
+
+        except (WebSocketDisconnect, JSONDecodeError):
+            break
+
+        # Handle action matching
+        if action not in gateway_actions:
+            await response.error("Specified action does not exist!")
+
+        elif action != "authenticate" and session.user_id is None:
+            await response.error("This action requires authentication.")
+
+        else:
 
             # Perform action
-            action_function = gateway_actions[action]
-            parameters, args = signature(action_function).parameters, []
-            if len(parameters) > 1:
-                args.append(
-                    parameters[list(parameters.keys())[1]].annotation(**payload)
-                )
-
+            func = gateway_actions[action]
+            params = signature(func).parameters
             try:
-                await action_function(session, *args)
+                success = await func(
+                    session,
+                    response,
+                    *(
+                       [params[list(params.keys())[2]].annotation(**payload)]
+                       if len(params) > 2 else [] 
+                    )
+                )
+                if (action == "authenticate") and success:
+                    await manager.add(session.user_id, ws)
 
             except pydantic.ValidationError as e:
-                await session.error(e.errors())
+                await response.error(e.errors())
 
-    # In case they send malformed JSON or disconnect,
-    # clean up everything
-    except (
-        WebSocketDisconnect,
-        json.JSONDecodeError
-    ):
-        pass
+        del response
 
-    await manager.disconnect(ws)
+    # Clean up
+    if session.user_id is not None:
+        await manager.remove(session.user_id)

@@ -11,6 +11,9 @@ websockets
 nanoid
 pymongo[zstd,encryption]
 
+# Redis caching
+redis[hiredis]
+
 # Password hashing
 argon2-cffi
 

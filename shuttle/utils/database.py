@@ -1,7 +1,9 @@
 # Copyright 2023 iiPython
 
 # Modules
+from redis import Redis
 from pymongo import MongoClient
+
 from shuttle.utils import config, logger
 
 # Initialization
@@ -18,3 +20,15 @@ client = MongoClient(
 
 # Database reference
 db = client.shuttle
+
+# Setup Redis connection
+logger.info("Connecting to Redis ....")
+redis = Redis(
+    host = config.redis["address"],
+    port = config.redis["port"],
+    username = "default",
+    password = config.redis["password"],
+    decode_responses = True
+)
+if redis.ping():
+    logger.info("Redis connection established!")
