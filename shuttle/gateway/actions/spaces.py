@@ -110,7 +110,7 @@ async def action_subscribe(
 async def action_space_info(
     session: Session,
     context: TemporaryContext,
-    payload: SpaceID
+    payload: SpaceID 
 ) -> None:
     space = db.spaces.find_one({"id": payload.id})
     if space is None:
@@ -118,23 +118,46 @@ async def action_space_info(
 
     space_owner = db.auth.find_one({"id": space["owner"]})
     return await context.success({
-        "id": space["id"],
-        "name": space["name"],
-        "owner": {
-            "id": space_owner["id"],
-            "name": space_owner["username"]
+        **{k: v for k, v in space.items() if k != "_id"},
+        **{
+            "owner": {
+                "id": space_owner["id"],
+                "name": space_owner["username"]
+            },
+            "members": [
+                {"name": u["username"], "id": u["id"]}
+                for u in db.auth.find({"spaces": {"$in": [space["id"]]}})
+            ],
+            "channels": [
+                {k: v for k, v in channel.items() if k != "_id"}
+                for channel in db.channels.find({"space_id": space["id"]})
+            ]
         },
-        "members": [
-            {"name": u["username"], "id": u["id"]}
-            for u in db.auth.find({"spaces": {"$in": [space["id"]]}})
-        ]
     })
+
+async def action_delete_space(
+    session: Session,
+    context: TemporaryContext,
+    payload: SpaceID
+) -> None:
+    space = db.spaces.find_one({"id": payload.id})
+    if space is None:
+        return await context.error("No such space exists.")
+
+    elif space["owner"] != session.user_id:
+        return await context.error("You don't own that space!")
+
+    db.auth.update_many(
+        {"spaces": {"$in": [payload.id]}},
+        {"$pull": {"spaces": payload.id}}
+    )
+    db.spaces.delete_one(space)
+    db.messages.delete_many({"space_id": payload.id})
+    return await context.success()
 
 # Route mapping
 spaces_actions = {
-    "create_space": action_create_space,
-    "join_space": action_join_space,
-    "get_spaces": action_get_spaces,
-    "subscribe": action_subscribe,
-    "space_info": action_space_info
+    "create_space": action_create_space, "join_space": action_join_space,
+    "get_spaces": action_get_spaces, "subscribe": action_subscribe,
+    "space_info": action_space_info, "delete_space": action_delete_space
 }

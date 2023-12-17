@@ -21,6 +21,10 @@ client = MongoClient(
 # Database reference
 db = client.shuttle
 
+# Create indices
+for collection in ["auth", "spaces", "channels"]:
+    db[collection].create_index("id", unique = True)
+
 # Setup Redis connection
 logger.info("Connecting to Redis ....")
 redis = Redis(
